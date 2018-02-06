@@ -10,9 +10,6 @@ find myself thinking that I wish I had a nicer syntax for searching through a
 list of dictionaries during work on
 [these scripts](https://github.com/bneb/countdown#letters).
 
-I ended up using SQLite which is/was a great experience. Nevertheless, I wanted
-to try this out as well.
-
 ## Features
 
 Given a list of dictionaries, say:
