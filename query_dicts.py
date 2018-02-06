@@ -21,7 +21,7 @@ Example:
 """
 from functools import reduce
 from operators import OPS, run_op
-from re import finditer
+from re import finditer, match
 
 
 _PATTERNS = ["(?P<op>{})".format("|".join(OPS))]
@@ -31,16 +31,21 @@ _PATTERNS += ["(?P<int>-?\d+\.?)"]
 _PATTERNS += ["(?P<bool>[Tt]rue|[Ff]alse)"]
 
 class QueryDicts:
-    def __init__(self, ds=None):
-        self.ds = ds
+    def __init__(self, dicts=None, result_fields=None):
+        self.dicts = dicts or []
+        self.result_fields = result_fields
         self.result = []
-        self.keys = reduce(lambda x, y: x.union(y), self.ds, set())
+        self.keys = reduce(lambda x, y: x.union(y), self.dicts, set())
 
     def get_patterns(self):
         return _PATTERNS + ["(?P<field>{})".format("|".join(self.keys))]
 
+    def add_dicts(self, ds):
+        self.dicts += ds
+        self.keys = reduce(lambda x, y: x.union(y), self.dicts, set())
+
     def add_dict(self, d):
-        self.ds.append(d)
+        self.dicts.append(d)
         self.keys |= set(d)
 
     def select(self, *fields):
@@ -48,7 +53,7 @@ class QueryDicts:
         return self
 
     def where(self, *filters):
-        res = self.ds.copy()
+        res = self.dicts.copy()
 
         for f in filters:
             if type(f) == dict:
@@ -87,4 +92,16 @@ class QueryDicts:
         return run_op(op, v1, v2)
 
 
-def query_dicts(ds): return QueryDicts(ds)
+class FromDicts(QueryDicts):
+    def from_dicts(self, ds):
+        if self.dicts and match("[Nn].*", input("Overwrite dicts (y/n)? ")):
+            return "Aborting..."
+
+        self.add_dicts(ds)
+        return self
+
+
+def query_dicts(ds): return QueryDicts(dicts=ds)
+
+
+def select_fields(*fields): return FromDicts(result_fields=fields)

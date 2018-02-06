@@ -17,7 +17,7 @@ class TestQueryDicts(unittest.TestCase):
     def test_add_dict(self):
         self.qd.add_dict({"c": 33, "d": 4})
         self.assertEqual(self.qd.keys, {"a", "b", "c", "d"})
-        self.assertEqual(len(self.qd.ds), 3)
+        self.assertEqual(len(self.qd.dicts), 3)
 
     def test_eval_filter_str(self):
         self.assertTrue(self.qd.eval_filter_str("a > 0", {"a": 1, "b": 2}))
@@ -47,3 +47,29 @@ class TestQueryDicts(unittest.TestCase):
         res2 = QueryDicts(exp1).select("c", "d").where("a")
         exp2 = [{"c": None, "d": None}]
         self.assertEqual(res2, exp2)
+
+
+class TestFromDicts(unittest.TestCase):
+
+    def setUp(self):
+        self.ds = [{"a": 1, "b": 2}, {"b": 22, "c": 3}]
+        self.fd = FromDicts(result_fields=("f1", "f2"))
+
+    def tearDown(self):
+        del self.ds
+        del self.fd
+
+    def test_from_dicts(self):
+        self.fd.from_dicts(self.ds)
+        self.assertEqual(self.fd.dicts, self.ds)
+
+    def test_select_fields(self):
+        self.assertEqual(
+            select_fields("f1", "f2").result_fields,
+            self.fd.result_fields
+        )
+
+    def test_query_dicts(self):
+        res = select_fields("a", "c").from_dicts(self.ds).where("b > 2")
+        exp = [{"a": None, "c": 3}]
+        self.assertEqual(res, exp)
